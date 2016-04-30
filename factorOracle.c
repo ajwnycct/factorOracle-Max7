@@ -42,8 +42,8 @@
 typedef struct _state
 {
 
-	long suffixLink;
-	long numberOfTransitionElements;
+    long suffixLink;
+    long numberOfTransitionElements;
     long transitionElement;
     long *transitionEndStates;
 	
@@ -54,8 +54,7 @@ typedef struct _state
 
 typedef struct _factorOracle
 {
-
-	t_object ob;
+    t_object ob;
     void *m_outlet1;
     void *m_outlet2;
     void *m_outlet3;
@@ -63,9 +62,9 @@ typedef struct _factorOracle
     void *m_outlet5;
     void *m_outlet6;
     void *m_outlet10;    
-	long *alphabet;
+    long *alphabet;
     char *json;
-	t_state *states;
+    t_state *states;
     long *input_string;
     long input_limit;
     long input_index;
@@ -75,7 +74,7 @@ typedef struct _factorOracle
     long output_index;
     long default_size;
     short send_metadata;
-	double probability;
+    double probability;
     long m_in1;
     void *m_proxy1;
     long m_in2;
@@ -141,23 +140,23 @@ void ext_main(void *r)
 {
     t_class *c;
 	
-	c = class_new("factorOracle", (method)factorOracle_new, 
+    c = class_new("factorOracle", (method)factorOracle_new,
 		(method)factorOracle_free, (long)sizeof(t_factorOracle), 0L, A_GIMME, 0);
 	
-	class_addmethod(c, (method)factorOracle_assist, "assist", A_CANT, 0);
+    class_addmethod(c, (method)factorOracle_assist, "assist", A_CANT, 0);
     class_addmethod(c, (method)factorOracle_float, "float", A_FLOAT, 0);
     class_addmethod(c, (method)factorOracle_read, "read", A_DEFSYM, 0);
     class_addmethod(c, (method)factorOracle_writealphabet, "writealphabet", A_DEFSYM, 0);
     class_addmethod(c, (method)factorOracle_writeinput, "writeinput", A_DEFSYM, 0);
     class_addmethod(c, (method)factorOracle_writeoutput, "writeoutput", A_DEFSYM, 0);
     class_addmethod(c, (method)factorOracle_writejson, "writejson", A_DEFSYM, 0);
-	class_addmethod(c, (method)factorOracle_int, "int", A_LONG, 0);
-	class_addmethod(c, (method)factorOracle_bang, "bang", A_DEFER, 0);
-	class_addmethod(c, (method)factorOracle_clear, "clear", A_NOTHING, 0);
+    class_addmethod(c, (method)factorOracle_int, "int", A_LONG, 0);
+    class_addmethod(c, (method)factorOracle_bang, "bang", A_DEFER, 0);
+    class_addmethod(c, (method)factorOracle_clear, "clear", A_NOTHING, 0);
     class_addmethod(c, (method)factorOracle_mode, "mode", A_LONG, 0);
     class_addmethod(c, (method)factorOracle_oracle, "oracle", A_NOTHING, 0);
-	class_register(CLASS_BOX, c); /* CLASS_NOBOX */
-	factorOracle_class = c;
+    class_register(CLASS_BOX, c); /* CLASS_NOBOX */
+    factorOracle_class = c;
 }
 
 
@@ -165,10 +164,10 @@ void ext_main(void *r)
 
 void *factorOracle_new(t_symbol *s, long argc, t_atom *argv)
 {
-	t_factorOracle *x = NULL;
+    t_factorOracle *x = NULL;
 
-	if ((x = (t_factorOracle *)object_alloc(factorOracle_class))) {
-		object_post((t_object *)x, "A new %s object was instantiated: 0x%X.", s->s_name, x);
+    if ((x = (t_factorOracle *)object_alloc(factorOracle_class))) {
+        object_post((t_object *)x, "A new %s object was instantiated: 0x%X.", s->s_name, x);
         
         x->m_proxy1 = proxy_new((t_object *)x, 1, &x->m_in1);
         x->m_proxy2 = proxy_new((t_object *)x, 2, &x->m_in2);
@@ -180,7 +179,7 @@ void *factorOracle_new(t_symbol *s, long argc, t_atom *argv)
         x->m_outlet6  =  intout((t_object *)x);
         x->m_outlet10 =  intout((t_object *)x);
         
-		x->input_index = 0;
+        x->input_index = 0;
         x->output_index = 0;
         x->output_state = -1;
         x->default_size = 10000;
@@ -222,10 +221,10 @@ void *factorOracle_new(t_symbol *s, long argc, t_atom *argv)
         
         x->mode = 1;
         x->probability = 0.75;
-	}
+    }
     
-	srand((unsigned)time(NULL));
-	return (x);
+    srand((unsigned)time(NULL));
+    return (x);
 }
 
 
@@ -237,11 +236,11 @@ void factorOracle_free(t_factorOracle *x)
     sysmem_freeptr(x->input_string);
     sysmem_freeptr(x->output_string);
     sysmem_freeptr(x->json);
-	for (long i = 0; i < x->input_index; i ++)
+    for (long i = 0; i < x->input_index; i ++)
     {
-		sysmem_freeptr(x->states[i].transitionEndStates);
-	}
-	sysmem_freeptr(x->states);
+        sysmem_freeptr(x->states[i].transitionEndStates);
+    }
+    sysmem_freeptr(x->states);
     sysmem_freeptr(x->m_proxy1);
     sysmem_freeptr(x->m_proxy2);
 }
@@ -252,22 +251,22 @@ void factorOracle_free(t_factorOracle *x)
 void factorOracle_assist(t_factorOracle *x, void *b, long m, long a, char *s)
 {
 
-	if (m == ASSIST_INLET)
+    if (m == ASSIST_INLET)
     {
-		switch (a)
+        switch (a)
         {
-			case 0:
+            case 0:
                 sprintf(s, "bang causes output. Many message options. See help documentation for more detail.");
                 break;
             case 1:
                 sprintf(s, "int sets state without causing output, bang gets state information. See help documentation for more detail.");
                 break;
-			case 2:
+            case 2:
                 sprintf(s, "Float [ 0.0 - 1.0 ]; specifies the probability of congruence between input and output strings.");
                 break;
-		}
-	}
-	else
+        }
+    }
+    else
     {
         switch (a) {
             case 0:
@@ -292,7 +291,7 @@ void factorOracle_assist(t_factorOracle *x, void *b, long m, long a, char *s)
                 sprintf(s, "final state.");
                 break;
         }
-	}
+    }
 }
 
 
@@ -300,17 +299,17 @@ void factorOracle_assist(t_factorOracle *x, void *b, long m, long a, char *s)
 
 long memberOfTransitionElements(long transition, long k, t_factorOracle *x)
 {
-	long test = -1;
-	long i;
-	for (i = 0; i < x->states[k].numberOfTransitionElements; i++)
+    long test = -1;
+    long i;
+    for (i = 0; i < x->states[k].numberOfTransitionElements; i++)
     {
-		if (transition == x->states[(x->states[k].transitionEndStates[i]) - 1].transitionElement)
+        if (transition == x->states[(x->states[k].transitionEndStates[i]) - 1].transitionElement)
         {
-			test = i;
-			break;
-		}
-	}
-	return test;
+            test = i;
+            break;
+        }
+    }
+    return test;
 }
 
 
@@ -329,39 +328,39 @@ long buildOracle(long transition, t_factorOracle *x)
     x->states[x->input_index].transitionEndStates[0] = (x->input_index + 1);
     x->states[x->input_index].numberOfTransitionElements = 1;
 
-	long k;
-	if (x->input_index == 0)
+    long k;
+    if (x->input_index == 0)
     {
-		x->states[x->input_index].suffixLink = -1;
-		k = -1; 
-	}
+        x->states[x->input_index].suffixLink = -1;
+        k = -1;
+    }
     else
     {
-		k = x->states[x->input_index].suffixLink;
-	}
+        k = x->states[x->input_index].suffixLink;
+    }
 
-	while ((k != -1) && ((memberOfTransitionElements(transition, k, x)) == -1))
+    while ((k != -1) && ((memberOfTransitionElements(transition, k, x)) == -1))
     {
-		x->states[k].transitionEndStates = (long*)sysmem_resizeptr(x->states[k].transitionEndStates, (x->states[k].numberOfTransitionElements + 1) * sizeof(long));
+        x->states[k].transitionEndStates = (long*)sysmem_resizeptr(x->states[k].transitionEndStates, (x->states[k].numberOfTransitionElements + 1) * sizeof(long));
         if (x->states[k].transitionEndStates == NULL)
         {
             object_post((t_object *)x, "%s", MEMORY_ALLOCATION_ERROR);
             return -1;
         }
         
-		x->states[k].transitionEndStates[x->states[k].numberOfTransitionElements] = (x->input_index + 1);
+        x->states[k].transitionEndStates[x->states[k].numberOfTransitionElements] = (x->input_index + 1);
         x->states[k].numberOfTransitionElements += 1;
-		k = x->states[k].suffixLink;
-	}
+        k = x->states[k].suffixLink;
+    }
 
-	if (k == -1)
+    if (k == -1)
     {
-		x->states[x->input_index+1].suffixLink = 0;
-	}
+        x->states[x->input_index+1].suffixLink = 0;
+    }
     else
     {
         x->states[(x->input_index + 1)].suffixLink = x->states[k].transitionEndStates[memberOfTransitionElements(transition, k, x)];
-	}
+    }
     
     x->states[(x->input_index + 1)].numberOfTransitionElements = 0;
     
@@ -572,10 +571,10 @@ int getInputString(t_factorOracle *x)
         return -1;
     }
     
-	for (long i = 0; i < x->input_index; i++)
+    for (long i = 0; i < x->input_index; i++)
     {
         x->input_string[i] = x->states[i].transitionElement;
-	}
+    }
     
     return 0;
 }
@@ -587,26 +586,26 @@ void factorOracle_oracle(t_factorOracle *x)
 {
     critical_enter(0);
     long i, j;
-	for (i = 0; i < x->input_index; i++)
+    for (i = 0; i < x->input_index; i++)
     {
-		long nte = x->states[i].numberOfTransitionElements;
-		long suf = x->states[i].suffixLink;
-		post("State %ld numberOfTransitionElements = %ld.", i, nte);
-		post("State %ld suffixLink points to state %ld.", i, suf);
+        long nte = x->states[i].numberOfTransitionElements;
+        long suf = x->states[i].suffixLink;
+        post("State %ld numberOfTransitionElements = %ld.", i, nte);
+        post("State %ld suffixLink points to state %ld.", i, suf);
         long trn;
         long end;
-		for (j = 0; j < nte; j++)
+        for (j = 0; j < nte; j++)
         {
             trn = x->states[(x->states[i].transitionEndStates[j]) - 1].transitionElement;
-			end = (x->states[i].transitionEndStates[j]);
+            end = (x->states[i].transitionEndStates[j]);
             post("    State %ld transition element %ld points to state %ld.", i, trn, end);
-		}
-	}
-	long fnte = x->states[x->input_index].numberOfTransitionElements;
-	long fsuf = x->states[x->input_index].suffixLink;
-	post("Final state (%ld) numberOfTransitionElements = %ld.", i, fnte);
-	post("Final state (%ld) suffixLink points to state %ld.", i, fsuf);
-	post("input_index = %ld", x->input_index);
+        }
+    }
+    long fnte = x->states[x->input_index].numberOfTransitionElements;
+    long fsuf = x->states[x->input_index].suffixLink;
+    post("Final state (%ld) numberOfTransitionElements = %ld.", i, fnte);
+    post("Final state (%ld) suffixLink points to state %ld.", i, fsuf);
+    post("input_index = %ld", x->input_index);
     critical_exit(0);
 }
 
@@ -621,12 +620,12 @@ void factorOracle_clear(t_factorOracle *x)
     sysmem_freeptr(x->input_string);
     sysmem_freeptr(x->json);
 	
-	for (long i = 0; i < x->input_index; i ++) {
-		sysmem_freeptr(x->states[i].transitionEndStates);
+    for (long i = 0; i < x->input_index; i ++) {
+        sysmem_freeptr(x->states[i].transitionEndStates);
         x->states[i].numberOfTransitionElements = 0;
-	}
+    }
 
-	x->input_index = 0;
+    x->input_index = 0;
     x->output_index = 0;
     x->output_state = -1;
 
