@@ -123,7 +123,7 @@ long factorOracle_walk(t_factorOracle *x);
 long memberOfTransitionElements(long transition, long k, t_factorOracle *x);
 long buildOracle(long transition, t_factorOracle *x);
 int getInputString(t_factorOracle *x);
-void getStateInfo(t_factorOracle *x, long state_index);
+void getStateInfo(t_factorOracle *x, long state_index, short set_output_state);
 long getAlphabet(t_factorOracle *x);
 long json(t_factorOracle *x);
 
@@ -370,16 +370,34 @@ long buildOracle(long transition, t_factorOracle *x)
 
 
 
-void getStateInfo(t_factorOracle *x, long state_index)
+void getStateInfo(t_factorOracle *x, long state_index, short set_output_state)
 {
     critical_enter(0);
-    
-    x->output_state = state_index;
-    
+    if (x->input_index < 1)
+    {
+        object_post((t_object *)x, EMPTY_ORACLE_ERROR);
+        critical_exit(0);
+        return;
+    }
+    if (set_output_state == 1)
+    {
+        if (state_index < 0 || state_index > x->input_index)
+        {
+            object_post((t_object *)x, "State index %ld is outside of index range [0, %ld].", state_index, x->input_index);
+            critical_exit(0);
+            return;
+        }
+        x->output_state = state_index;
+    }
+    else if (x->output_state < 0)
+    {
+        object_post((t_object *)x, "Initial output state has not been selected.");
+        critical_exit(0);
+        return;
+    }
     t_atom *es;
     t_atom *et;
     long len;
-    
     if (x->output_state == x->input_index)
     {
         es = (t_atom*)sysmem_newptr(sizeof(t_atom));
@@ -387,6 +405,7 @@ void getStateInfo(t_factorOracle *x, long state_index)
         if (es == NULL || et == NULL)
         {
             critical_exit(0);
+            object_post((t_object *)x, "%s", MEMORY_ALLOCATION_ERROR);
             return;
         }
         len = 1;
@@ -401,6 +420,7 @@ void getStateInfo(t_factorOracle *x, long state_index)
         if (es == NULL || et == NULL)
         {
             critical_exit(0);
+            object_post((t_object *)x, "%s", MEMORY_ALLOCATION_ERROR);
             return;
         }
         long endState;
@@ -425,10 +445,17 @@ void getStateInfo(t_factorOracle *x, long state_index)
 
 
 
-
 void chooseTransition(t_factorOracle *x)
 {
      critical_enter(0);
+	 
+     if (x->input_index < 1)
+     {
+         object_post((t_object *)x, EMPTY_ORACLE_ERROR);
+         critical_exit(0);
+         return;
+     }
+	 
      long output;
      if (x->output_index < x->output_limit)
      {
@@ -460,27 +487,16 @@ void chooseTransition(t_factorOracle *x)
 
 
 
-
-void getCurrentStateInfo(t_factorOracle *x)
-{
-    if (x->output_state > -1)
-    {
-        getStateInfo(x, x->output_state);
-    }
-}
-
-
-
-
 void factorOracle_bang(t_factorOracle *x)
 {
+    
     switch (proxy_getinlet((t_object *)x))
     {
         case 0:
             chooseTransition(x);
             break;
         case 2:
-            getCurrentStateInfo(x);
+            getStateInfo(x, (long)NULL, 0);
             break;
     }
 }
@@ -511,21 +527,6 @@ void addTransition(t_factorOracle *x, long transition)
 
 
 
-void changeState(t_factorOracle *x, long state_index)
-{
-    if (state_index < 0 || state_index > x->input_index)
-    {
-        object_post((t_object *)x, "State index %ld is outside of index range [0, %ld].", state_index, x->input_index);
-    }
-    else
-    {
-        getStateInfo(x, state_index);
-    }
-}
-
-
-
-
 void factorOracle_int(t_factorOracle *x, long n)
 {
     switch (proxy_getinlet((t_object *)x))
@@ -537,7 +538,7 @@ void factorOracle_int(t_factorOracle *x, long n)
         }
         case 2:
         {
-            changeState(x, n);
+            getStateInfo(x, n, 1);
             break;
         }
     }
@@ -720,7 +721,7 @@ long json(t_factorOracle *x)
     {
         MAX_LONG_CHARS = 21;
     }
-     x->json = sysmem_newptr(4 * x->input_index * MAX_LONG_CHARS * CHAR_BIT + 24 * x->input_index * CHAR_BIT - 2 * MAX_LONG_CHARS * CHAR_BIT - 2 * CHAR_BIT);
+    x->json = sysmem_newptr(4 * x->input_index * MAX_LONG_CHARS * CHAR_BIT + 24 * x->input_index * CHAR_BIT - 2 * MAX_LONG_CHARS * CHAR_BIT - 2 * CHAR_BIT);
     if (x->json == NULL)
     {
         object_post((t_object *)x, "%s", MEMORY_ALLOCATION_ERROR);
@@ -786,6 +787,7 @@ void factorOracle_writefile(t_factorOracle *x, char *filename, short path, short
     long err;
     t_filehandle fh;
     err = path_createsysfile(filename, path, 'TEXT', &fh);
+    sysfile_seteof(fh, 0);
     switch (feature_to_export)
     {
         case 0:
@@ -899,7 +901,7 @@ void factorOracle_dowrite(t_factorOracle *x, t_symbol *s, short argc, t_atom *ar
         strcpy(filename, s->s_name);
         path = path_getdefault();
     }
-    factorOracle_writefile(x, filename, path, (short*)atom_getlong(argv+0));
+    factorOracle_writefile(x, filename, path, (short)atom_getlong(argv+0));
 }
 
 
@@ -949,7 +951,7 @@ void factorOracle_writeoutput(t_factorOracle *x, t_symbol *s)
     critical_enter(0);
     if (x->output_index < 1)
     {
-        object_post((t_object *)x, EMPTY_ORACLE_ERROR);
+        object_post((t_object *)x, "No output has been generated.");
     }
     else
     {
@@ -1152,16 +1154,14 @@ long factorOracle_walk(t_factorOracle *x)
     if ((x->output_state == -1) || (x->output_state == x->input_index))
     {
         long suffixState = jumpBack(x, x->input_index);
-        x->output_state = suffixState + 1;         return x->states[suffixState].transitionElement;
+        x->output_state = suffixState + 1;
+		return x->states[suffixState].transitionElement;
     }
-    
     double n = (double)rand() / (double)((unsigned)RAND_MAX + 1);
-    
     if ((n >= x->probability) && (x->states[x->output_state].suffixLink != 0))
     {
         long suffixState = x->states[x->output_state].suffixLink;
         x->output_state = suffixState + 1;
-        
         return x->states[suffixState].transitionElement;
     }
     else
