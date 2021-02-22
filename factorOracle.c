@@ -24,9 +24,6 @@
  */
 
 
-// NOTE: This is an alpha version still under development. There may be bugs.
-
-
 
 
 #include "ext.h"

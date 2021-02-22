@@ -1,8 +1,7 @@
 # factorOracle
 C source for the *factorOracle* Max external.
 
-NOTE: This is an alpha phase project, still under development and testing.  There may be bugs.  
-Currently, the external is verified to run on Mac OS Mavericks 10.9.5 in Max 7.2, 32-bit mode only.
+Currently, the external is verified to run on Mac OS 10.9.5 or greater (excluding M1 Macs), in Max 7, 32-bit mode only. Basic functionality verified in Max 8; there may be issues when sending messages that open system dialogs.
 
 Follow instructions in the [Max7 SDK](https://cycling74.com/downloads/sdk) documentation to build factorOracle.c for your architecture.
 
